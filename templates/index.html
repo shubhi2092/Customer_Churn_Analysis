@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>ChurnIQ — All Models Comparison</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#0a0c10;--surface:#111318;--card:#161a22;--border:#1e2330;
+  --accent:#ff4d6d;--accent2:#00d4aa;--accent3:#6c63ff;--warn:#ffb347;
+  --text:#e8eaf0;--muted:#6b7280;--radius:14px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:0;}
+
+/* HEADER */
+header{position:sticky;top:0;z-index:100;background:rgba(10,12,16,.88);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:64px;}
+.logo{font-family:'Syne',sans-serif;font-weight:800;font-size:1.4rem;background:linear-gradient(135deg,var(--accent),var(--accent3));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.logo span{color:var(--accent2);-webkit-text-fill-color:var(--accent2);}
+.header-tag{font-size:.72rem;font-weight:500;letter-spacing:2px;text-transform:uppercase;color:var(--muted);}
+
+/* LAYOUT */
+main{max-width:1320px;margin:0 auto;padding:2.5rem 1.5rem;position:relative;z-index:1;}
+
+/* HERO */
+.hero{text-align:center;padding:3rem 1rem 1.5rem;}
+.hero-eyebrow{display:inline-block;font-size:.72rem;font-weight:500;letter-spacing:3px;text-transform:uppercase;color:var(--accent2);border:1px solid rgba(0,212,170,.3);border-radius:50px;padding:4px 14px;margin-bottom:1.2rem;}
+.hero h1{font-family:'Syne',sans-serif;font-size:clamp(2rem,5vw,3.4rem);font-weight:800;line-height:1.1;letter-spacing:-1.5px;margin-bottom:.8rem;}
+.hero h1 em{font-style:normal;background:linear-gradient(135deg,var(--accent),var(--warn));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.hero p{font-size:1rem;color:var(--muted);max-width:540px;margin:0 auto 2rem;line-height:1.7;}
+
+/* UPLOAD */
+.upload-zone{border:2px dashed var(--border);border-radius:var(--radius);padding:2.5rem;text-align:center;cursor:pointer;transition:all .25s;background:var(--card);max-width:560px;margin:0 auto 2rem;}
+.upload-zone:hover,.upload-zone.drag-over{border-color:var(--accent2);background:rgba(0,212,170,.04);transform:translateY(-2px);}
+.upload-icon{font-size:2.8rem;margin-bottom:.8rem;}
+.upload-zone h3{font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:700;margin-bottom:.4rem;}
+.upload-zone p{font-size:.88rem;color:var(--muted);}
+.upload-zone input{display:none;}
+.upload-zone label{display:inline-block;margin-top:1rem;background:var(--accent2);color:#000;font-weight:600;font-size:.88rem;padding:8px 20px;border-radius:8px;cursor:pointer;transition:opacity .2s;}
+.upload-zone label:hover{opacity:.85;}
+
+/* LOADER */
+#loader{display:none;text-align:center;padding:3rem;}
+.spinner{width:48px;height:48px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 1rem;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.loader-steps{margin-top:1.5rem;display:flex;flex-direction:column;gap:.5rem;}
+.loader-step{font-size:.85rem;color:var(--muted);display:flex;align-items:center;justify-content:center;gap:.5rem;}
+.loader-step.active{color:var(--accent2);}
+
+/* DASHBOARD */
+#dashboard{display:none;}
+
+/* TABS */
+.tabs{display:flex;gap:.5rem;margin-bottom:2rem;border-bottom:1px solid var(--border);padding-bottom:0;}
+.tab-btn{padding:.7rem 1.4rem;border:none;background:transparent;color:var(--muted);font-family:'Syne',sans-serif;font-weight:600;font-size:.88rem;letter-spacing:.5px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .2s;text-transform:uppercase;}
+.tab-btn.active{color:var(--accent2);border-bottom-color:var(--accent2);}
+.tab-btn:hover:not(.active){color:var(--text);}
+.tab-panel{display:none;}
+.tab-panel.active{display:block;}
+
+/* SECTION TITLE */
+.section-title{font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:700;margin-bottom:1.2rem;display:flex;align-items:center;gap:8px;}
+.section-title::after{content:'';flex:1;height:1px;background:var(--border);}
+
+/* STAT CARDS */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:1rem;margin-bottom:2rem;}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:1.4rem 1.2rem;transition:transform .2s,border-color .2s;animation:fadeUp .5s ease both;}
+.stat-card:hover{transform:translateY(-3px);border-color:var(--accent3);}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+.stat-label{font-size:.72rem;font-weight:500;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:.5rem;}
+.stat-value{font-family:'Syne',sans-serif;font-size:1.9rem;font-weight:800;line-height:1;}
+.stat-value.red{color:var(--accent);}
+.stat-value.green{color:var(--accent2);}
+.stat-value.purple{color:var(--accent3);}
+.stat-value.orange{color:var(--warn);}
+.stat-sub{font-size:.75rem;color:var(--muted);margin-top:.3rem;}
+
+/* MODEL COMPARISON TABLE */
+.model-table-wrap{overflow-x:auto;margin-bottom:2rem;}
+table{width:100%;border-collapse:collapse;font-size:.88rem;}
+thead tr{background:var(--surface);}
+th{padding:.9rem 1rem;text-align:left;font-family:'Syne',sans-serif;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);border-bottom:1px solid var(--border);}
+td{padding:.85rem 1rem;border-bottom:1px solid var(--border);vertical-align:middle;}
+tr:hover td{background:rgba(255,255,255,.02);}
+.rank-badge{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;font-size:.72rem;font-weight:800;font-family:'Syne',sans-serif;}
+.rank-1{background:rgba(255,179,71,.2);color:var(--warn);border:1px solid rgba(255,179,71,.4);}
+.rank-2{background:rgba(200,200,200,.15);color:#aaa;border:1px solid rgba(200,200,200,.3);}
+.rank-3{background:rgba(180,120,60,.15);color:#cd7f32;border:1px solid rgba(180,120,60,.3);}
+.rank-other{background:var(--surface);color:var(--muted);border:1px solid var(--border);}
+.best-tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;background:rgba(255,179,71,.15);color:var(--warn);border:1px solid rgba(255,179,71,.3);margin-left:6px;}
+.metric-bar-wrap{display:flex;align-items:center;gap:8px;}
+.metric-bar{flex:1;height:6px;background:var(--border);border-radius:50px;overflow:hidden;}
+.metric-fill{height:100%;border-radius:50px;}
+.fill-green{background:linear-gradient(90deg,var(--accent2),#00a080);}
+.fill-purple{background:linear-gradient(90deg,var(--accent3),#4a44cc);}
+.fill-orange{background:linear-gradient(90deg,var(--warn),#e08000);}
+.fill-red{background:linear-gradient(90deg,var(--accent),#cc2040);}
+.fill-blue{background:linear-gradient(90deg,#4ec9b0,#2a9d8f);}
+
+/* CHARTS GRID */
+.charts-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:1.2rem;margin-bottom:2rem;}
+.chart-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:1.4rem;animation:fadeUp .6s ease both;}
+.chart-title{font-family:'Syne',sans-serif;font-size:.85rem;font-weight:700;margin-bottom:1rem;text-transform:uppercase;letter-spacing:.5px;}
+.chart-wrap{position:relative;height:230px;}
+
+/* MODEL DETAIL PANEL */
+.model-detail-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1.2rem;margin-bottom:2rem;}
+.model-selector-row{display:flex;flex-wrap:wrap;gap:.6rem;margin-bottom:1.5rem;}
+.model-pill{padding:.5rem 1.1rem;border-radius:50px;border:1px solid var(--border);background:var(--surface);color:var(--muted);font-size:.82rem;font-weight:500;cursor:pointer;transition:all .2s;font-family:'DM Sans',sans-serif;}
+.model-pill:hover{border-color:var(--accent3);color:var(--text);}
+.model-pill.active{background:var(--accent3);border-color:var(--accent3);color:#fff;}
+
+/* PREDICT SECTION */
+.predict-section{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:2rem;margin-bottom:2rem;}
+.predict-model-row{display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:1.5rem;}
+.predict-model-btn{padding:.45rem 1rem;border-radius:50px;border:1px solid var(--border);background:var(--surface);color:var(--muted);font-size:.8rem;font-weight:500;cursor:pointer;transition:all .2s;}
+.predict-model-btn:hover{border-color:var(--accent2);color:var(--text);}
+.predict-model-btn.active{background:rgba(0,212,170,.15);border-color:var(--accent2);color:var(--accent2);}
+.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-bottom:1.5rem;}
+.form-group label{display:block;font-size:.75rem;font-weight:500;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:6px;}
+.form-group input,.form-group select{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:10px 12px;font-family:'DM Sans',sans-serif;font-size:.9rem;transition:border-color .2s;outline:none;}
+.form-group input:focus,.form-group select:focus{border-color:var(--accent3);}
+.form-group select option{background:var(--surface);}
+.btn-predict{background:linear-gradient(135deg,var(--accent),var(--accent3));color:#fff;border:none;padding:12px 32px;border-radius:10px;font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;cursor:pointer;transition:opacity .2s,transform .15s;}
+.btn-predict:hover{opacity:.9;transform:translateY(-1px);}
+
+/* PREDICT RESULTS */
+#predict-result{display:none;margin-top:1.5rem;animation:fadeUp .4s ease;}
+.result-summary{border-radius:var(--radius);padding:1.5rem;border:1px solid var(--border);margin-bottom:1rem;}
+.result-summary.churn{background:rgba(255,77,109,.08);border-color:rgba(255,77,109,.4);}
+.result-summary.no-churn{background:rgba(0,212,170,.08);border-color:rgba(0,212,170,.4);}
+.result-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;margin-bottom:1rem;}
+.result-verdict{font-family:'Syne',sans-serif;font-size:1.4rem;font-weight:800;}
+.result-verdict.red{color:var(--accent);}
+.result-verdict.green{color:var(--accent2);}
+.risk-badge{padding:4px 14px;border-radius:50px;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;}
+.risk-High{background:rgba(255,77,109,.2);color:var(--accent);border:1px solid rgba(255,77,109,.4);}
+.risk-Medium{background:rgba(255,179,71,.2);color:var(--warn);border:1px solid rgba(255,179,71,.4);}
+.risk-Low{background:rgba(0,212,170,.2);color:var(--accent2);border:1px solid rgba(0,212,170,.4);}
+.prob-bar-wrap{margin-top:.8rem;}
+.prob-label{display:flex;justify-content:space-between;font-size:.82rem;color:var(--muted);margin-bottom:6px;}
+.prob-bar{height:10px;background:var(--border);border-radius:50px;overflow:hidden;}
+.prob-fill{height:100%;border-radius:50px;background:linear-gradient(90deg,var(--accent2),var(--accent));transition:width .8s cubic-bezier(.4,0,.2,1);}
+
+/* ALL MODELS PREDICTION GRID */
+.all-preds-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:.8rem;}
+.pred-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:1rem 1.1rem;transition:border-color .2s;}
+.pred-card.selected-model{border-color:var(--accent3);background:rgba(108,99,255,.06);}
+.pred-card.churn-yes{border-left:3px solid var(--accent);}
+.pred-card.churn-no{border-left:3px solid var(--accent2);}
+.pred-model-name{font-family:'Syne',sans-serif;font-size:.82rem;font-weight:700;margin-bottom:.5rem;display:flex;align-items:center;gap:6px;}
+.selected-dot{width:7px;height:7px;border-radius:50%;background:var(--accent3);display:inline-block;}
+.pred-prob{font-family:'Syne',sans-serif;font-size:1.6rem;font-weight:800;line-height:1;}
+.pred-prob.high{color:var(--accent);}
+.pred-prob.medium{color:var(--warn);}
+.pred-prob.low{color:var(--accent2);}
+.pred-verdict{font-size:.78rem;color:var(--muted);margin-top:.3rem;}
+.mini-bar{height:4px;background:var(--border);border-radius:50px;overflow:hidden;margin-top:.6rem;}
+.mini-fill{height:100%;border-radius:50px;background:linear-gradient(90deg,var(--accent2),var(--accent));transition:width .7s ease;}
+
+/* TOAST */
+#toast{position:fixed;bottom:2rem;right:2rem;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 20px;font-size:.88rem;color:var(--text);box-shadow:0 8px 32px rgba(0,0,0,.4);transform:translateY(80px);opacity:0;transition:all .35s cubic-bezier(.4,0,.2,1);z-index:999;max-width:320px;}
+#toast.show{transform:translateY(0);opacity:1;}
+#toast.success{border-color:var(--accent2);}
+#toast.error{border-color:var(--accent);}
+
+@media(max-width:600px){header{padding:0 1rem;}main{padding:1.5rem 1rem;}.charts-grid{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Churn<span>IQ</span></div>
+  <div class="header-tag">6-Model Comparison Engine</div>
+</header>
+
+<main>
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-eyebrow">Telco Churn Analysis</div>
+    <h1>Compare <em>All 6 Models</em><br/>Side by Side</h1>
+    <p>Upload your dataset — all 6 ML models train simultaneously. Compare accuracy, ROC-AUC, F1 scores and predict churn using any model.</p>
+  </section>
+
+  <!-- UPLOAD -->
+  <div class="upload-zone" id="uploadZone">
+    <div class="upload-icon">📂</div>
+    <h3>Drop your CSV file here</h3>
+    <p>Training 6 models: Logistic Regression · Decision Tree · Random Forest · Gradient Boosting · XGBoost · LightGBM</p>
+    <input type="file" id="fileInput" accept=".csv"/>
+    <label for="fileInput">Browse File</label>
+  </div>
+
+  <!-- LOADER -->
+  <div id="loader">
+    <div class="spinner"></div>
+    <p style="color:var(--muted);font-size:.95rem;margin-bottom:.5rem;">Training all 6 models simultaneously…</p>
+    <div class="loader-steps">
+      <div class="loader-step">⚙️ Cleaning & engineering features</div>
+      <div class="loader-step">⚖️ Applying SMOTE to balance classes</div>
+      <div class="loader-step">🤖 Training Logistic Regression &amp; Decision Tree</div>
+      <div class="loader-step">🌲 Training Random Forest &amp; Gradient Boosting</div>
+      <div class="loader-step">⚡ Training XGBoost &amp; LightGBM</div>
+      <div class="loader-step">📊 Evaluating all models…</div>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="dashboard">
+
+    <!-- TABS -->
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab('overview')">📊 Overview</button>
+      <button class="tab-btn" onclick="switchTab('comparison')">🏆 Model Comparison</button>
+      <button class="tab-btn" onclick="switchTab('details')">🔍 Model Details</button>
+      <button class="tab-btn" onclick="switchTab('predict')">🔮 Predict</button>
+    </div>
+
+    <!-- TAB: OVERVIEW -->
+    <div class="tab-panel active" id="tab-overview">
+      <div class="section-title">📋 Dataset Summary</div>
+      <div class="stats-grid" id="statsGrid"></div>
+
+      <div class="section-title">📈 Exploratory Analysis</div>
+      <div class="charts-grid">
+        <div class="chart-card">
+          <div class="chart-title">Churn by Contract Type</div>
+          <div class="chart-wrap"><canvas id="contractChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">Churn by Tenure Group</div>
+          <div class="chart-wrap"><canvas id="tenureChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">Churn by Internet Service</div>
+          <div class="chart-wrap"><canvas id="internetChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">Churn by Payment Method</div>
+          <div class="chart-wrap"><canvas id="paymentChart"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: COMPARISON -->
+    <div class="tab-panel" id="tab-comparison">
+      <div class="section-title">🏆 All Models — Performance Comparison</div>
+
+      <div class="model-table-wrap">
+        <table id="modelTable">
+          <thead>
+            <tr>
+              <th>Rank</th>
+              <th>Model</th>
+              <th>Accuracy</th>
+              <th>ROC-AUC</th>
+              <th>Precision</th>
+              <th>Recall</th>
+              <th>F1 Score</th>
+            </tr>
+          </thead>
+          <tbody id="modelTableBody"></tbody>
+        </table>
+      </div>
+
+      <div class="charts-grid">
+        <div class="chart-card">
+          <div class="chart-title">Accuracy Comparison</div>
+          <div class="chart-wrap"><canvas id="accCompChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">ROC-AUC Comparison</div>
+          <div class="chart-wrap"><canvas id="aucCompChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">Precision vs Recall</div>
+          <div class="chart-wrap"><canvas id="precRecChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">F1 Score Comparison</div>
+          <div class="chart-wrap"><canvas id="f1CompChart"></canvas></div>
+        </div>
+        <div class="chart-card" style="grid-column:1/-1;">
+          <div class="chart-title">ROC Curves — All Models</div>
+          <div class="chart-wrap" style="height:320px;"><canvas id="rocAllChart"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: MODEL DETAILS -->
+    <div class="tab-panel" id="tab-details">
+      <div class="section-title">🔍 Inspect Individual Model</div>
+      <div class="model-selector-row" id="modelSelectorRow"></div>
+      <div class="charts-grid" id="detailCharts">
+        <div class="chart-card">
+          <div class="chart-title" id="fiTitle">Feature Importance</div>
+          <div class="chart-wrap"><canvas id="fiChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title" id="cmTitle">Confusion Matrix</div>
+          <div class="chart-wrap"><canvas id="cmChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title" id="rocDetailTitle">ROC Curve</div>
+          <div class="chart-wrap"><canvas id="rocDetailChart"></canvas></div>
+        </div>
+        <div class="chart-card" id="metricsDetailCard">
+          <div class="chart-title">Metrics at a Glance</div>
+          <div id="metricsDetail" style="padding:.5rem 0;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: PREDICT -->
+    <div class="tab-panel" id="tab-predict">
+      <div class="predict-section">
+        <div class="section-title">Choose Model for Prediction</div>
+        <div class="predict-model-row" id="predictModelRow"></div>
+
+        <div class="section-title">Customer Details</div>
+        <div class="form-grid">
+          <div class="form-group"><label>Tenure (months)</label><input type="number" id="p_tenure" value="12" min="0" max="72"/></div>
+          <div class="form-group"><label>Monthly Charges ($)</label><input type="number" id="p_monthly" value="65.00" step="0.01"/></div>
+          <div class="form-group"><label>Total Charges ($)</label><input type="number" id="p_total" value="780.00" step="0.01"/></div>
+          <div class="form-group"><label>Contract Type</label>
+            <select id="p_contract"><option>Month-to-month</option><option>One year</option><option>Two year</option></select></div>
+          <div class="form-group"><label>Internet Service</label>
+            <select id="p_internet"><option>Fiber optic</option><option>DSL</option><option>No</option></select></div>
+          <div class="form-group"><label>Online Security</label>
+            <select id="p_security"><option>No</option><option>Yes</option><option>No internet service</option></select></div>
+          <div class="form-group"><label>Tech Support</label>
+            <select id="p_techsupport"><option>No</option><option>Yes</option><option>No internet service</option></select></div>
+          <div class="form-group"><label>Payment Method</label>
+            <select id="p_payment"><option>Electronic check</option><option>Mailed check</option><option>Bank transfer (automatic)</option><option>Credit card (automatic)</option></select></div>
+          <div class="form-group"><label>Gender</label>
+            <select id="p_gender"><option>Male</option><option>Female</option></select></div>
+          <div class="form-group"><label>Senior Citizen</label>
+            <select id="p_senior"><option value="0">No</option><option value="1">Yes</option></select></div>
+          <div class="form-group"><label>Partner</label>
+            <select id="p_partner"><option>No</option><option>Yes</option></select></div>
+          <div class="form-group"><label>Dependents</label>
+            <select id="p_dependents"><option>No</option><option>Yes</option></select></div>
+        </div>
+        <button class="btn-predict" onclick="predictChurn()">⚡ Run All Models &amp; Predict</button>
+
+        <div id="predict-result">
+          <!-- Selected model summary -->
+          <div class="result-summary" id="resultSummary">
+            <div class="result-header">
+              <div class="result-verdict" id="result-verdict"></div>
+              <div class="risk-badge" id="result-badge"></div>
+            </div>
+            <div id="result-desc" style="font-size:.88rem;color:var(--muted);margin-bottom:.8rem;"></div>
+            <div class="prob-bar-wrap">
+              <div class="prob-label"><span id="result-model-label">Selected Model</span><span id="prob-pct" style="font-weight:700;color:var(--text);"></span></div>
+              <div class="prob-bar"><div class="prob-fill" id="prob-fill" style="width:0%"></div></div>
+            </div>
+          </div>
+
+          <!-- All models prediction grid -->
+          <div class="section-title" style="margin-top:1.5rem;">All Models Prediction Breakdown</div>
+          <div class="all-preds-grid" id="allPredsGrid"></div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /dashboard -->
+</main>
+
+<div id="toast"></div>
+
+<script>
+// ── State ────────────────────────────────────────────────────────────────────
+let allMetrics    = [];
+let bestModelName = '';
+let selectedDetailModel = '';
+let selectedPredModel   = '';
+const chartReg = {};
+const PALETTE  = ['#ff4d6d','#00d4aa','#6c63ff','#ffb347','#4ec9b0','#c792ea'];
+const MODEL_COLORS = {};
+
+// ── Tab switching ─────────────────────────────────────────────────────────────
+function switchTab(id) {
+  document.querySelectorAll('.tab-btn').forEach((b,i) => {
+    b.classList.toggle('active', ['overview','comparison','details','predict'][i] === id);
+  });
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+}
+
+// ── Chart helper ──────────────────────────────────────────────────────────────
+function mkChart(id, type, labels, datasets, opts={}) {
+  if (chartReg[id]) chartReg[id].destroy();
+  const ctx = document.getElementById(id).getContext('2d');
+  chartReg[id] = new Chart(ctx, {
+    type, data:{labels,datasets},
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{
+        legend:{labels:{color:'#6b7280',font:{size:11,family:'DM Sans'}}},
+        tooltip:{backgroundColor:'#161a22',borderColor:'#1e2330',borderWidth:1,
+                 titleColor:'#e8eaf0',bodyColor:'#9ca3af'}
+      },
+      scales: type!=='doughnut'&&type!=='radar' ? {
+        x:{ticks:{color:'#6b7280',font:{size:10}},grid:{color:'#1e2330'}},
+        y:{ticks:{color:'#6b7280',font:{size:10}},grid:{color:'#1e2330'}}
+      }:{},
+      ...opts
+    }
+  });
+}
+
+// ── Drag & drop ───────────────────────────────────────────────────────────────
+const zone = document.getElementById('uploadZone');
+zone.addEventListener('dragover', e=>{e.preventDefault();zone.classList.add('drag-over');});
+zone.addEventListener('dragleave', ()=>zone.classList.remove('drag-over'));
+zone.addEventListener('drop', e=>{e.preventDefault();zone.classList.remove('drag-over');if(e.dataTransfer.files[0])handleUpload(e.dataTransfer.files[0]);});
+document.getElementById('fileInput').addEventListener('change', e=>{if(e.target.files[0])handleUpload(e.target.files[0]);});
+
+// ── Upload ────────────────────────────────────────────────────────────────────
+function handleUpload(file) {
+  const fd = new FormData();
+  fd.append('file', file);
+  zone.style.display = 'none';
+  document.getElementById('loader').style.display = 'block';
+  animateLoaderSteps();
+
+  fetch('/upload',{method:'POST',body:fd})
+    .then(r=>r.json())
+    .then(data=>{
+      document.getElementById('loader').style.display = 'none';
+      if(data.error){showToast(data.error,'error');zone.style.display='';return;}
+      allMetrics    = data.all_metrics;
+      bestModelName = data.best_model;
+      data.all_metrics.forEach((m,i)=>{ MODEL_COLORS[m.name]=PALETTE[i%PALETTE.length]; });
+      renderDashboard(data);
+      showToast(`✅ All ${data.all_metrics.length} models trained! Best: ${data.best_model}`,'success');
+    })
+    .catch(()=>{
+      document.getElementById('loader').style.display='none';
+      zone.style.display='';
+      showToast('Upload failed. Please try again.','error');
+    });
+}
+
+function animateLoaderSteps() {
+  const steps = document.querySelectorAll('.loader-step');
+  steps.forEach((s,i)=>setTimeout(()=>s.classList.add('active'), i*800));
+}
+
+// ── Render dashboard ──────────────────────────────────────────────────────────
+function renderDashboard(data) {
+  document.getElementById('dashboard').style.display = 'block';
+  const di  = data.dataset_info;
+  const eda = data.eda;
+  const best = allMetrics[0];
+
+  // KPI cards
+  document.getElementById('statsGrid').innerHTML = [
+    {label:'Total Customers', value:di.total_customers.toLocaleString(), cls:'purple', sub:'in dataset'},
+    {label:'Churned',         value:di.churned_customers.toLocaleString(), cls:'red', sub:`${di.churn_rate}% churn rate`},
+    {label:'Features Used',   value:di.features, cls:'orange', sub:'after engineering'},
+    {label:'Models Trained',  value:allMetrics.length, cls:'green', sub:'simultaneously'},
+    {label:'Best Accuracy',   value:best.accuracy+'%', cls:'green', sub:best.name},
+    {label:'Best ROC-AUC',    value:best.roc_auc, cls:'purple', sub:best.name},
+  ].map((s,i)=>`<div class="stat-card" style="animation-delay:${i*.08}s">
+    <div class="stat-label">${s.label}</div>
+    <div class="stat-value ${s.cls}">${s.value}</div>
+    <div class="stat-sub">${s.sub}</div>
+  </div>`).join('');
+
+  // EDA charts
+  const cc = eda.contract_churn;
+  mkChart('contractChart','bar',Object.keys(cc),
+    [{label:'Churn Rate %',data:Object.values(cc),backgroundColor:['#ff4d6d','#ffb347','#00d4aa'],borderRadius:8,borderSkipped:false}],
+    {plugins:{legend:{display:false}},scales:{y:{ticks:{callback:v=>v+'%',color:'#6b7280'},grid:{color:'#1e2330'}},x:{ticks:{color:'#6b7280'},grid:{color:'#1e2330'}}}});
+
+  const tc = eda.tenure_churn;
+  mkChart('tenureChart','bar',Object.keys(tc),
+    [{label:'Churn Rate %',data:Object.values(tc),backgroundColor:PALETTE,borderRadius:8,borderSkipped:false}],
+    {plugins:{legend:{display:false}},scales:{y:{ticks:{callback:v=>v+'%',color:'#6b7280'},grid:{color:'#1e2330'}},x:{ticks:{color:'#6b7280'},grid:{color:'#1e2330'}}}});
+
+  const ic = eda.internet_churn;
+  mkChart('internetChart','doughnut',Object.keys(ic),
+    [{data:Object.values(ic),backgroundColor:PALETTE,borderWidth:2,borderColor:'#161a22'}],
+    {plugins:{legend:{position:'bottom',labels:{color:'#6b7280',font:{size:11}}},tooltip:{callbacks:{label:ctx=>` ${ctx.label}: ${ctx.parsed}%`}}}});
+
+  const pc = eda.payment_churn;
+  const shortLabels = Object.keys(pc).map(k=>k.replace(' (automatic)','*').replace('Electronic ','E-').replace('Mailed ','Mail ').replace('Bank transfer','Bank').replace('Credit card','CC'));
+  mkChart('paymentChart','bar',shortLabels,
+    [{label:'Churn Rate %',data:Object.values(pc),backgroundColor:PALETTE,borderRadius:8,borderSkipped:false}],
+    {plugins:{legend:{display:false}},scales:{y:{ticks:{callback:v=>v+'%',color:'#6b7280'},grid:{color:'#1e2330'}},x:{ticks:{color:'#6b7280',font:{size:9}},grid:{color:'#1e2330'}}}});
+
+  // Comparison tab
+  renderComparisonTab();
+
+  // Details tab
+  renderModelSelectorRow();
+  renderModelDetail(allMetrics[0].name);
+
+  // Predict tab
+  renderPredictModelRow();
+}
+
+// ── Comparison tab ────────────────────────────────────────────────────────────
+function renderComparisonTab() {
+  const names = allMetrics.map(m=>m.name);
+  const colors = names.map(n=>MODEL_COLORS[n]);
+
+  // Table
+  document.getElementById('modelTableBody').innerHTML = allMetrics.map((m,i)=>{
+    const rankCls = i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'rank-other';
+    const isBest  = i===0;
+    return `<tr>
+      <td><span class="rank-badge ${rankCls}">${i+1}</span></td>
+      <td><strong>${m.name}</strong>${isBest?'<span class="best-tag">🏆 Best</span>':''}</td>
+      <td><div class="metric-bar-wrap"><div class="metric-bar"><div class="metric-fill fill-green" style="width:${m.accuracy}%"></div></div><span>${m.accuracy}%</span></div></td>
+      <td><div class="metric-bar-wrap"><div class="metric-bar"><div class="metric-fill fill-purple" style="width:${m.roc_auc*100}%"></div></div><span>${m.roc_auc}</span></div></td>
+      <td><div class="metric-bar-wrap"><div class="metric-bar"><div class="metric-fill fill-orange" style="width:${m.precision}%"></div></div><span>${m.precision}%</span></div></td>
+      <td><div class="metric-bar-wrap"><div class="metric-bar"><div class="metric-fill fill-red" style="width:${m.recall}%"></div></div><span>${m.recall}%</span></div></td>
+      <td><div class="metric-bar-wrap"><div class="metric-bar"><div class="metric-fill fill-blue" style="width:${m.f1}%"></div></div><span>${m.f1}%</span></div></td>
+    </tr>`;
+  }).join('');
+
+  // Bar charts
+  const barOpts = (yLabel) => ({
+    plugins:{legend:{display:false}},
+    scales:{
+      y:{min:60,ticks:{callback:v=>v+'%',color:'#6b7280'},grid:{color:'#1e2330'}},
+      x:{ticks:{color:'#6b7280',font:{size:9}},grid:{color:'#1e2330'}}
+    }
+  });
+
+  mkChart('accCompChart','bar',names,
+    [{label:'Accuracy %',data:allMetrics.map(m=>m.accuracy),backgroundColor:colors,borderRadius:8,borderSkipped:false}],barOpts());
+  mkChart('aucCompChart','bar',names,
+    [{label:'ROC-AUC',data:allMetrics.map(m=>m.roc_auc),backgroundColor:colors,borderRadius:8,borderSkipped:false}],
+    {plugins:{legend:{display:false}},scales:{y:{min:.5,ticks:{color:'#6b7280'},grid:{color:'#1e2330'}},x:{ticks:{color:'#6b7280',font:{size:9}},grid:{color:'#1e2330'}}}});
+  mkChart('f1CompChart','bar',names,
+    [{label:'F1 Score %',data:allMetrics.map(m=>m.f1),backgroundColor:colors,borderRadius:8,borderSkipped:false}],barOpts());
+
+  // Precision vs Recall grouped bar
+  mkChart('precRecChart','bar',names,[
+    {label:'Precision %',data:allMetrics.map(m=>m.precision),backgroundColor:'rgba(108,99,255,.7)',borderRadius:6,borderSkipped:false},
+    {label:'Recall %',   data:allMetrics.map(m=>m.recall),   backgroundColor:'rgba(255,77,109,.7)',borderRadius:6,borderSkipped:false},
+  ],{scales:{y:{min:40,ticks:{callback:v=>v+'%',color:'#6b7280'},grid:{color:'#1e2330'}},x:{ticks:{color:'#6b7280',font:{size:9}},grid:{color:'#1e2330'}}}});
+
+  // All ROC curves
+  if(chartReg['rocAllChart']) chartReg['rocAllChart'].destroy();
+  const rocCtx = document.getElementById('rocAllChart').getContext('2d');
+  const step = v => Math.max(1,Math.floor(v/80));
+  chartReg['rocAllChart'] = new Chart(rocCtx,{
+    type:'line',
+    data:{
+      labels: allMetrics[0].roc_fpr.filter((_,i)=>i%step(allMetrics[0].roc_fpr.length)===0).map(v=>v.toFixed(2)),
+      datasets:[
+        ...allMetrics.map((m,i)=>{
+          const s=step(m.roc_fpr.length);
+          return {label:`${m.name} (${m.roc_auc})`,
+            data: m.roc_tpr.filter((_,j)=>j%s===0),
+            borderColor:PALETTE[i%PALETTE.length],borderWidth:2,
+            backgroundColor:'transparent',pointRadius:0,tension:.4};
+        }),
+        {label:'Random',data:allMetrics[0].roc_fpr.filter((_,i)=>i%step(allMetrics[0].roc_fpr.length)===0),
+         borderColor:'#1e2330',borderDash:[4,4],pointRadius:0,borderWidth:1.5}
+      ]
+    },
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#6b7280',font:{size:11,family:'DM Sans'}}}},
+      scales:{
+        x:{title:{display:true,text:'False Positive Rate',color:'#6b7280'},ticks:{color:'#6b7280',font:{size:9},maxTicksLimit:8},grid:{color:'#1e2330'}},
+        y:{title:{display:true,text:'True Positive Rate',color:'#6b7280'},ticks:{color:'#6b7280',font:{size:9}},grid:{color:'#1e2330'}}
+      }}
+  });
+}
+
+// ── Model detail tab ──────────────────────────────────────────────────────────
+function renderModelSelectorRow() {
+  document.getElementById('modelSelectorRow').innerHTML = allMetrics.map(m=>
+    `<button class="model-pill ${m.name===allMetrics[0].name?'active':''}"
+      onclick="selectDetailModel('${m.name}',this)">${m.name}</button>`
+  ).join('');
+  selectedDetailModel = allMetrics[0].name;
+}
+
+function selectDetailModel(name, btn) {
+  document.querySelectorAll('.model-pill').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  selectedDetailModel = name;
+  renderModelDetail(name);
+}
+
+function renderModelDetail(name) {
+  const m = allMetrics.find(x=>x.name===name);
+  if(!m) return;
+  const color = MODEL_COLORS[name];
+
+  // Feature importance
+  document.getElementById('fiTitle').textContent = `Feature Importance — ${name}`;
+  if(m.feature_importance && m.feature_importance.length>0){
+    const fi = m.feature_importance;
+    mkChart('fiChart','bar',fi.map(f=>f.feature).reverse(),
+      [{label:'Importance',data:fi.map(f=>+(f.importance*100).toFixed(2)).reverse(),
+        backgroundColor:color+'bb',borderRadius:6,borderSkipped:false}],
+      {indexAxis:'y',plugins:{legend:{display:false}},
+       scales:{x:{ticks:{callback:v=>v+'%',color:'#6b7280',font:{size:9}},grid:{color:'#1e2330'}},
+               y:{ticks:{color:'#6b7280',font:{size:9}},grid:{color:'#1e2330'}}}});
+  }
+
+  // Confusion matrix as heatmap-style bar
+  document.getElementById('cmTitle').textContent = `Confusion Matrix — ${name}`;
+  const cm = m.confusion_matrix;
+  const cmLabels=['TN','FP','FN','TP'];
+  const cmVals=[cm[0][0],cm[0][1],cm[1][0],cm[1][1]];
+  mkChart('cmChart','bar',cmLabels,
+    [{label:'Count',data:cmVals,backgroundColor:['#00d4aa','#ff4d6d','#ffb347','#6c63ff'],borderRadius:8,borderSkipped:false}],
+    {plugins:{legend:{display:false}},scales:{y:{ticks:{color:'#6b7280'},grid:{color:'#1e2330'}},x:{ticks:{color:'#6b7280'},grid:{color:'#1e2330'}}}});
+
+  // ROC
+  document.getElementById('rocDetailTitle').textContent = `ROC Curve — ${name} (AUC: ${m.roc_auc})`;
+  const s=Math.max(1,Math.floor(m.roc_fpr.length/80));
+  const fpr=m.roc_fpr.filter((_,i)=>i%s===0);
+  const tpr=m.roc_tpr.filter((_,i)=>i%s===0);
+  if(chartReg['rocDetailChart']) chartReg['rocDetailChart'].destroy();
+  const rCtx=document.getElementById('rocDetailChart').getContext('2d');
+  chartReg['rocDetailChart']=new Chart(rCtx,{
+    type:'line',
+    data:{labels:fpr.map(v=>v.toFixed(2)),datasets:[
+      {label:`AUC=${m.roc_auc}`,data:tpr,borderColor:color,backgroundColor:color+'22',fill:true,tension:.4,pointRadius:0,borderWidth:2},
+      {label:'Random',data:fpr,borderColor:'#1e2330',borderDash:[4,4],pointRadius:0,borderWidth:1.5}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#6b7280',font:{size:11}}}},
+      scales:{x:{ticks:{color:'#6b7280',font:{size:9},maxTicksLimit:6},grid:{color:'#1e2330'}},
+              y:{ticks:{color:'#6b7280',font:{size:9}},grid:{color:'#1e2330'}}}}
+  });
+
+  // Metrics at a glance
+  document.getElementById('metricsDetail').innerHTML = [
+    {label:'Accuracy',  value:m.accuracy+'%',   color:'var(--accent2)'},
+    {label:'ROC-AUC',   value:m.roc_auc,         color:'var(--accent3)'},
+    {label:'Precision', value:m.precision+'%',   color:'var(--warn)'},
+    {label:'Recall',    value:m.recall+'%',       color:'var(--accent)'},
+    {label:'F1 Score',  value:m.f1+'%',           color:'#4ec9b0'},
+    {label:'TP',        value:cm[1][1].toLocaleString(), color:'var(--accent3)'},
+    {label:'FP',        value:cm[0][1].toLocaleString(), color:'var(--accent)'},
+    {label:'FN',        value:cm[1][0].toLocaleString(), color:'var(--warn)'},
+    {label:'TN',        value:cm[0][0].toLocaleString(), color:'var(--accent2)'},
+  ].map(x=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:.6rem 0;border-bottom:1px solid var(--border);">
+    <span style="font-size:.82rem;color:var(--muted);">${x.label}</span>
+    <span style="font-family:'Syne',sans-serif;font-weight:700;color:${x.color};">${x.value}</span>
+  </div>`).join('');
+}
+
+// ── Predict model row ─────────────────────────────────────────────────────────
+function renderPredictModelRow() {
+  selectedPredModel = bestModelName;
+  document.getElementById('predictModelRow').innerHTML = allMetrics.map(m=>
+    `<button class="predict-model-btn ${m.name===bestModelName?'active':''}"
+      onclick="selectPredModel('${m.name}',this)">${m.name}${m.name===bestModelName?' ⭐':''}</button>`
+  ).join('');
+}
+
+function selectPredModel(name, btn) {
+  document.querySelectorAll('.predict-model-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  selectedPredModel = name;
+}
+
+// ── Predict ───────────────────────────────────────────────────────────────────
+function predictChurn() {
+  const payload = {
+    selected_model:  selectedPredModel,
+    tenure:          +document.getElementById('p_tenure').value,
+    MonthlyCharges:  +document.getElementById('p_monthly').value,
+    TotalCharges:    +document.getElementById('p_total').value,
+    Contract:         document.getElementById('p_contract').value,
+    InternetService:  document.getElementById('p_internet').value,
+    OnlineSecurity:   document.getElementById('p_security').value,
+    TechSupport:      document.getElementById('p_techsupport').value,
+    PaymentMethod:    document.getElementById('p_payment').value,
+    gender:           document.getElementById('p_gender').value,
+    SeniorCitizen:   +document.getElementById('p_senior').value,
+    Partner:          document.getElementById('p_partner').value,
+    Dependents:       document.getElementById('p_dependents').value,
+    PhoneService:'Yes',MultipleLines:'No',OnlineBackup:'No',
+    DeviceProtection:'No',StreamingTV:'No',StreamingMovies:'No',PaperlessBilling:'Yes',
+  };
+
+  fetch('/predict',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
+  .then(r=>r.json())
+  .then(data=>{
+    if(data.error){showToast(data.error,'error');return;}
+    const sel = data.selected;
+    const box = document.getElementById('predict-result');
+    box.style.display='block';
+
+    const sum = document.getElementById('resultSummary');
+    sum.className = 'result-summary '+(sel.prediction==='Churn'?'churn':'no-churn');
+    document.getElementById('result-verdict').textContent = sel.prediction==='Churn'?'⚠️ Likely to Churn':'✅ Likely to Stay';
+    document.getElementById('result-verdict').className   = 'result-verdict '+(sel.prediction==='Churn'?'red':'green');
+    document.getElementById('result-badge').textContent   = sel.risk+' Risk';
+    document.getElementById('result-badge').className     = 'risk-badge risk-'+sel.risk;
+    document.getElementById('result-model-label').textContent = sel.model+' Prediction';
+    document.getElementById('result-desc').textContent    =
+      sel.prediction==='Churn'
+        ? `${sel.model} predicts a ${sel.probability}% churn probability. Consider a retention offer.`
+        : `${sel.model} predicts only ${sel.probability}% churn probability. Customer looks stable.`;
+    document.getElementById('prob-pct').textContent = sel.probability+'%';
+    setTimeout(()=>{document.getElementById('prob-fill').style.width=sel.probability+'%';},50);
+
+    // All models grid
+    document.getElementById('allPredsGrid').innerHTML = data.all_preds.map(p=>{
+      const riskCls = p.risk==='High'?'high':p.risk==='Medium'?'medium':'low';
+      return `<div class="pred-card ${p.is_selected?'selected-model':''} ${p.prediction==='Churn'?'churn-yes':'churn-no'}">
+        <div class="pred-model-name">${p.is_selected?'<span class="selected-dot"></span>':''}${p.model}</div>
+        <div class="pred-prob ${riskCls}">${p.probability}%</div>
+        <div class="pred-verdict">${p.prediction} · <span class="risk-badge risk-${p.risk}" style="padding:2px 8px;font-size:.65rem;">${p.risk}</span></div>
+        <div class="mini-bar"><div class="mini-fill" style="width:${p.probability}%"></div></div>
+      </div>`;
+    }).join('');
+
+    box.scrollIntoView({behavior:'smooth',block:'nearest'});
+  })
+  .catch(()=>showToast('Prediction failed. Please try again.','error'));
+}
+
+// ── Toast ─────────────────────────────────────────────────────────────────────
+function showToast(msg,type='success'){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.className='show '+type;
+  setTimeout(()=>{t.className='';},4000);
+}
+</script>
+</body>
+</html>
